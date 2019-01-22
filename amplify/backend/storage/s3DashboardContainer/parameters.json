@@ -1,0 +1,13 @@
+{
+    "bucketName": "ll-dashboard873a42e410bf4e9b8962701c2695090f",
+    "authPolicyName": "s3_amplify_2eba4d79",
+    "unauthPolicyName": "s3_amplify_2eba4d79",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "authPermissions": "rw",
+    "unauthPermissions": ""
+}
