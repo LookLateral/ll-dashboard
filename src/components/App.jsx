@@ -53,12 +53,12 @@ class App extends React.Component {
           this.setState({
             email: user.attributes.email
           });
-        this.getUser();
+        //this.getUser();
       })
       .catch(err => console.log(err));
    
     } else {
-      this.getUser();
+      //this.getUser();
     }
 
     if (this.props.authState === "signedIn") {

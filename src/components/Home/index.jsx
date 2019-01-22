@@ -120,7 +120,7 @@ class Home extends Component {
           
           <br /><br />
 
-          <a href="" target="_blank" className={classes.registerButton}>
+          <a href="https://www.looklateral.com/LLWhitePaper.pdf" target="_blank" className={classes.registerButton}>
             <Button className={classes.register}>WHITE PAPER</Button>
           </a>
           
