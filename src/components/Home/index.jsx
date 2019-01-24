@@ -29,14 +29,9 @@ const styles = theme => ({
     color: theme.palette.text.secondary,
     boxShadow: 'none',
   },
-  gridLeft: {
-    //backgroundImage: `url(${BackgroundLeft})`,
-  },
   cardContent1: {
     padding: 0, paddingBottom: '0px !important',
     backgroundImage: `url(${BackgroundLeft})`,
-    backgroundColor: 'transparent',
-    height: '100%',
   },
   cardContent2: {
     padding: 0, paddingBottom: '0px !important',
@@ -45,10 +40,6 @@ const styles = theme => ({
     minHeight: 100,
   },
 
-  title: {
-    fontSize: 20,
-    color: '#fff',
-  },
   subtitle: {
     fontSize: 40,
     marginBottom: 30,
@@ -72,6 +63,20 @@ const styles = theme => ({
     border: 2,
     marginTop:40,
   },
+  spanColored: {
+    fontSize: 80,
+    width: '100%',
+    position: 'absolute',
+    bottom: 0, left: 0,
+    height: 200,
+    padding: 20,
+    opacity: 0.8,
+
+  },
+  textSpanColored: {
+    textDecoration: 'none',
+    color: '#fff',
+  },
 });
 
 const properties = {
@@ -89,6 +94,7 @@ class Home extends Component {
     surname:'',
     token:0,
     categories: [],
+    viewport: { width: 0, height: 0, },
   };
 
   componentDidMount () { 
@@ -111,6 +117,15 @@ class Home extends Component {
       .then (res => { 
         this.setState ({ categories: res }) 
       }) 
+    
+    if(this.state.viewport.width !== document.documentElement.clientWidth){
+      this.setState({
+        viewport: {
+            width: document.documentElement.clientWidth,
+            height: document.documentElement.clientHeight
+        }
+      });
+    }
       
   }
 
@@ -139,22 +154,26 @@ class Home extends Component {
     const { classes } = this.props;
 
     let categories = this.state.categories.map ((category, index) => {       
-      return <div key={index}> 
-                <img src={category._embedded['wp:featuredmedia'][0].media_details.sizes.large.source_url} />
-                <span className="legend" style={{backgroundColor: category.acf.category_color}}> {category.acf.category_name} </span> 
+      return <div key={index} style={{ height: this.state.viewport.height-260 }}> 
+                <img src={category._embedded['wp:featuredmedia'][0].media_details.sizes.large.source_url} height={(this.state.viewport.height -260)} />
+                <span className={classes.spanColored} style={{backgroundColor: category.acf.category_color}}>
+                  <a 
+                      href={category.acf.category_link} 
+                      target="_blank" 
+                      className={classes.textSpanColored}>
+                  {category.acf.category_name}</a>
+                </span> 
               </div> 
     });
-
-    console.log(categories);
 
     return (
       <div className={classes.root}>
       
       <Grid container spacing={0}>
          
-          <Grid item xs={12} sm={12} md={6}  className={classes.gridLeft}>
+          <Grid item xs={12} sm={12} md={6}>
               <Card className={classes.card}>           
-                <CardContent className={classes.cardContent1}>
+                <CardContent className={classes.cardContent1} style={{ height: this.state.viewport.height-260 }}>
 
                   <div className={classes.spacer}></div>
 
