@@ -23,7 +23,7 @@ import bg12 from './shared/images/bg-login/bg-login-12.png';
 import { AmplifyTheme } from 'aws-amplify-react';
 
 import aws_exports from './aws-exports';
-import Amplify, { Auth } from 'aws-amplify';
+import Amplify, { Auth, API } from 'aws-amplify';
 Amplify.configure(aws_exports);
 
 var rand = parseInt(Math.random() * 11);
@@ -112,9 +112,10 @@ class AppRoutes extends React.Component {
   constructor(props) {
     super(props);
     this.state = {     
-      email:'', firstName:'', middleName:'', surname:'',
-      llToken:0, llScore:0,
-      cognitoLogged: false, kycCompleted: false, llRegistered: false, 
+      email:'', firstName:'', middleName:'', lastName:'',
+      llToken:0, llScore:0, investDate: '0000-00-00',
+      cognitoLogged: false, userLoaded: false,
+      kycCompleted: false, llRegistered: false, 
       categories: [],
       viewport: { width: 0, height: 0, },
     }
@@ -129,28 +130,36 @@ class AppRoutes extends React.Component {
   - he can access to the platform ...
   */
 
-  /*getUser = async () => {
-    const response = await API.get('preKYCapi', '/items/object/' + this.state.email);
-    if(response.firstName && response.surname && this.state.firstName !== response.firstName && this.state.surname !== response.surname) { //enough to say step1 done
-      this.setState({       
-        ...
-      });
+  getUser = async () => {
+    const response = await API.get('dashboardAPI', '/items/' + this.state.email);
+    if(response){
+      //console.log('getUser response:\n' + JSON.stringify(response));
+      if(this.state.userLoaded === false) { 
+        this.setState({   
+          userLoaded: true,    
+          firstName: response[0].firstName,
+          lastName: response[0].lastName,
+          llToken: response[0].investAmount,
+          investDate: response[0].investDate
+        },  function () { console.log('getUser:\n' + JSON.stringify(this.state)); });
+      }
     }
-  }*/
+  }
 
   resize = () => {
     if(this.state.viewport.width !== document.documentElement.clientWidth || this.state.viewport.height !== document.documentElement.clientHeight){
       this.setState({
         viewport: {
             width: document.documentElement.clientWidth,
-            height: document.documentElement.clientHeight
+            height: document.documentElement.clientHeight,
         }
-      }, function () { this.forceUpdate() } ); 
+      }, function () { this.forceUpdate() }); 
     }
   }
   
-  componentDidMount() { window.addEventListener('resize', this.resize) }
-  componentWillUnmount() { window.removeEventListener('resize', this.resize) }
+
+  componentDidMount() { window.addEventListener('resize', this.resize); }
+  componentWillUnmount() { window.removeEventListener('resize', this.resize); }
 
   componentWillMount () { 
     
@@ -162,12 +171,16 @@ class AppRoutes extends React.Component {
           this.setState({
             email: user.attributes.email,
             cognitoLogged: true,
-          } /*, function () { console.log('routes.js state:\n' + JSON.stringify(this.state)); }*/ );
-        //this.getUser();
+          } , 
+          function () { 
+            console.log('routes.js state:\n' + JSON.stringify(this.state)); 
+            this.getUser();
+          });
+        
       })
       .catch(err => console.log(err));  
     } else {
-      //this.getUser();
+      this.getUser();
     }
 
     let dataURL = "http://blog.looklateral.com/wp-json/wp/v2/platformcategories?_embed"; 

@@ -163,12 +163,72 @@
 				}
 			}
 		},
+		"storagedashboardDB": {
+			"Type": "AWS::CloudFormation::Stack",
+			"Properties": {
+				"TemplateURL": "https://s3.amazonaws.com/ll-dashboard-20190122160204-deployment/amplify-cfn-templates/storage/dashboardDB-cloudformation-template.json",
+				"Parameters": {
+					"tableName": "dashboardDB",
+					"partitionKeyName": "user_email",
+					"partitionKeyType": "S",
+					"env": "dev"
+				}
+			}
+		},
 		"hostingS3AndCloudFront": {
 			"Type": "AWS::CloudFormation::Stack",
 			"Properties": {
 				"TemplateURL": "https://s3.amazonaws.com/ll-dashboard-20190122160204-deployment/amplify-cfn-templates/hosting/template.json",
 				"Parameters": {
 					"bucketName": "ll-dashboard-20190122160726-hostingbucket",
+					"env": "dev"
+				}
+			}
+		},
+		"functiondashboardLambda": {
+			"Type": "AWS::CloudFormation::Stack",
+			"Properties": {
+				"TemplateURL": "https://s3.amazonaws.com/ll-dashboard-20190122160204-deployment/amplify-cfn-templates/function/dashboardLambda-cloudformation-template.json",
+				"Parameters": {
+					"storagedashboardDBName": {
+						"Fn::GetAtt": [
+							"storagedashboardDB",
+							"Outputs.Name"
+						]
+					},
+					"storagedashboardDBArn": {
+						"Fn::GetAtt": [
+							"storagedashboardDB",
+							"Outputs.Arn"
+						]
+					},
+					"env": "dev"
+				}
+			}
+		},
+		"apidashboardAPI": {
+			"Type": "AWS::CloudFormation::Stack",
+			"Properties": {
+				"TemplateURL": "https://s3.amazonaws.com/ll-dashboard-20190122160204-deployment/amplify-cfn-templates/api/dashboardAPI-cloudformation-template.json",
+				"Parameters": {
+					"authRoleName": {
+						"Ref": "AuthRoleName"
+					},
+					"unauthRoleName": {
+						"Ref": "UnauthRoleName"
+					},
+					"functiondashboardLambdaName": {
+						"Fn::GetAtt": [
+							"functiondashboardLambda",
+							"Outputs.Name"
+						]
+					},
+					"functiondashboardLambdaArn": {
+						"Fn::GetAtt": [
+							"functiondashboardLambda",
+							"Outputs.Arn"
+						]
+					},
 					"env": "dev"
 				}
 			}

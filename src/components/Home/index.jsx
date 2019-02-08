@@ -5,6 +5,7 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
+import { Link } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 //import { Auth } from 'aws-amplify';
 import BackgroundLeft from '../../shared/images/image-home-sx.jpg';
@@ -62,7 +63,6 @@ const Home = (props) => {
   
     const { classes } = props;
     const { userState } = props;
-    //console.log('Home props.userstate:\n' + JSON.stringify(userState));
     
     let categories = userState.categories.map ((category, index) => {       
       return <div key={index} style={{ height: userState.viewport.height-260 }}> 
@@ -81,6 +81,9 @@ const Home = (props) => {
               </div> 
     });
 
+    let llToken = userState.llToken ? userState.llToken : 0;
+    let llScore = llToken * Math.floor(( Date.parse(Date('Y-m-d')) - Date.parse(userState.investDate) ) / 86400000); 
+
     return (  <div className={classes.root}>
       
       <Grid container spacing={0}>
@@ -96,8 +99,8 @@ const Home = (props) => {
                   </Typography>            
                   
                   <Typography className={classes.pos}>
-                  TOKENs HOLD: 12569.457<br /><br />
-                  LOOK SCORE: 125.69457
+                  TOKENs HOLD: {llToken}<br /><br />
+                  LOOK SCORE: {llScore}
                   </Typography>                 
                   
                   <br />
@@ -112,6 +115,20 @@ const Home = (props) => {
                   </a>
 
                   <div className={classes.spacer}></div>
+
+                  { userState.llRegistered ? null : (
+
+                      <div>
+                        <Typography className={classes.pos}>
+                        Don't waste time, register to Look Lateral Platform
+                        </Typography>                                        
+                        <br />  
+                        <Link className={classes.registerButton} to='/register'>
+                          <Button className={classes.register}>REGISTER</Button>
+                        </Link>
+                      </div>
+                    )
+                  }
                   
                 </CardContent>
               </Card>

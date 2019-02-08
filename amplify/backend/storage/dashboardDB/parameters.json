@@ -1,0 +1,5 @@
+{
+    "tableName": "dashboardDB",
+    "partitionKeyName": "user_email",
+    "partitionKeyType": "S"
+}
