@@ -1,5 +1,5 @@
 import React/*, { Component }*/ from "react";
-//import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
@@ -18,6 +18,7 @@ const styles = {
   root: { flexGrow: 1, marginTop: -150 },
   card: {
     height: 'calc(100% - 150px)',
+    overflow: '',
     marginTop: 150, //marginBottom: 40, minWidth: 275, minHeight: 650,
     padding: 0,//padding: theme.spacing.unit * 2,
     textAlign: 'center',
@@ -29,7 +30,7 @@ const styles = {
     backgroundImage: `url(${BackgroundLeft})`, backgroundSize: 'cover',
     height: '100%',
   },
-  cardContent2: { padding: 0, paddingBottom: '0px !important', },
+  cardContent2: { padding: 0, paddingBottom: '0px !important', height: '100%', },
   spacer: { minHeight: 100, },
   subtitle: {
     fontSize: 40, marginBottom: 30,
@@ -81,54 +82,99 @@ const Home = (props) => {
               </div> 
     });
 
-    let llToken = userState.llToken ? userState.llToken : 0;
-    let llScore = llToken * Math.floor(( Date.parse(Date('Y-m-d')) - Date.parse(userState.investDate) ) / 86400000); 
+    //let llToken = userState.llToken ? userState.llToken : 0;
+    let holdingDays = userState.investDate !== false ? Math.floor( (Date.parse(Date('Y-m-d')) - Date.parse(userState.investDate)) / (1000 * 60 * 60 * 24)) : 0;
+    //let llScore = llToken * holdingDays; 
 
-    return (  <div className={classes.root}>
+    return (  
+    
+    <div className={classes.root}>
       
       <Grid container spacing={0}>
          
           <Grid item xs={12} sm={12} md={6}>
               <Card className={classes.card}>           
                 <CardContent className={classes.cardContent1} >
-
+                  
                   <div className={classes.spacer}></div>
 
-                  <Typography className={classes.subtitle}>
-                  WELCOME TO THE TOKEN HOLDERS DASHBOARD
-                  </Typography>            
                   
-                  <Typography className={classes.pos}>
-                  TOKENs HOLD: {llToken}<br /><br />
-                  LOOK SCORE: {llScore}
-                  </Typography>                 
-                  
-                  <br />
+                    <Typography className={classes.subtitle}>
+                    WELCOME TO THE TOKEN HOLDERS DASHBOARD
+                    </Typography>            
+                    
+                    { userState.userLoaded === false ? (
 
-                  <a 
-                    href="https://www.looklateral.com/LLWhitePaper.pdf" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={classes.registerButton}
-                  >
-                    <Button className={classes.register}>WHITE PAPER</Button>
-                  </a>
+                        userState.userActive === true ? null : (
+                          
+                          <div>
+                            
+                            <Typography className={classes.pos}>
+                              It seems that you didn't perform our kyc...
+                            </Typography>   
 
-                  <div className={classes.spacer}></div>
+                            <br />
 
-                  { userState.llRegistered ? null : (
+                            <a 
+                              href="https://xbr.brightcoin.us/signup?coinId=fd6aa11a-2cb9-4272-b37f-9d0f0e0ab953" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className={classes.registerButton}
+                            >
+                                <Button className={classes.register}>Look Lateral KYC</Button>
+                            </a>
 
+                          </div>
+                        )
+
+                    ) : (
+                      
                       <div>
                         <Typography className={classes.pos}>
-                        Don't waste time, register to Look Lateral Platform
-                        </Typography>                                        
-                        <br />  
-                        <Link className={classes.registerButton} to='/register'>
-                          <Button className={classes.register}>REGISTER</Button>
-                        </Link>
+                          TOKENs HOLD: {userState.llToken}<br /><br />
+                          HOLDING DAYS: {holdingDays}<br /><br />
+                          LOOK SCORE: {userState.llScore}
+                        </Typography>   
+                        
+                        <br />
+
+                        <a 
+                          href="https://www.looklateral.com/LLWhitePaper.pdf" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={classes.registerButton}
+                        >
+                          <Button className={classes.register}>WHITE PAPER</Button>
+                        </a>
                       </div>
-                    )
-                  }
+
+                    )}              
+                    
+                    { /* <div className={classes.spacer}></div> */ }
+
+                    { userState.llRegistered ? (
+                        
+                        <div>
+                          <Typography className={classes.pos}>
+                          YOU ARE A LOOK LATERAL USER SINCE <br /> {userState.registrationDate}
+                          </Typography>                                        
+                        </div>
+
+                    ) : (
+
+                      userState.userActive ? (
+                          <div>
+                            <Typography className={classes.pos}>
+                            Don't waste time, register to Look Lateral Platform
+                            </Typography>                                        
+                            <br />  
+                            <Link className={classes.registerButton} to='/register'>
+                              <Button className={classes.register}>REGISTER</Button>
+                            </Link>
+                          </div>
+                      ) : null
+
+                    )}
                   
                 </CardContent>
               </Card>
@@ -151,5 +197,9 @@ const Home = (props) => {
     )
   }
   
+  Home.propTypes = {
+    classes: PropTypes.object.isRequired
+  };
+
   export default withStyles(styles)(Home);
   

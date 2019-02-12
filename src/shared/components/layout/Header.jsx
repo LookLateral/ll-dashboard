@@ -67,9 +67,6 @@ function signOut(){
 function NavBar(props) {
   
   const { classes } = props;
-  //const { userState } = props;
-
-  //console.log('header.js props:\n' + JSON.stringify(userState));
   
   return (
     <div className={classes.root}>

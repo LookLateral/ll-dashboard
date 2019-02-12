@@ -5,6 +5,9 @@ import { Route, Switch } from 'react-router-dom';
 // Components
 import App from './components/App';
 import Home from './components/Home';
+import Register from './components/Register';
+import Profile from './components/Profile';
+import Sidebar from './shared/components/layout/Sidebar';
 import Error404 from './components/Error/404';
 import { Authenticator, SignIn, ConfirmSignIn, RequireNewPassword, SignUp, ConfirmSignUp, VerifyContact, ForgotPassword, TOTPSetup } from 'aws-amplify-react';
 
@@ -24,7 +27,14 @@ import { AmplifyTheme } from 'aws-amplify-react';
 
 import aws_exports from './aws-exports';
 import Amplify, { Auth, API } from 'aws-amplify';
+
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { fab } from '@fortawesome/free-brands-svg-icons';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+
+
 Amplify.configure(aws_exports);
+library.add(fab, fas);
 
 var rand = parseInt(Math.random() * 11);
 var bg, bgc;
@@ -112,18 +122,33 @@ class AppRoutes extends React.Component {
   constructor(props) {
     super(props);
     this.state = {     
-      email:'', firstName:'', middleName:'', lastName:'',
-      llToken:0, llScore:0, investDate: '0000-00-00',
-      cognitoLogged: false, userLoaded: false,
-      kycCompleted: false, llRegistered: false, 
+      cognitoLogged: false, userLoaded: false, userActive: true, user:false, userType: 0,
+
+      email:'', firstName:'', middleName:'', lastName:'', dateBirth:'',
+      address:'', city:'', zipCode:'', regionState:'',
+      countryCitizenship:'', countryResidence:'',
+      occupation:'', accreditedInvestor: false,
+      
+      kycCompleted: false, kycDate: false, kycDateUpdate: false,
+      llToken:0, llScore:0, investDate: false,
+      llRegistered: false, registrationDate: false, registrationDateUpdate: false,
+
       categories: [],
       viewport: { width: 0, height: 0, },
+      sidebarOpened: false,
     }
+    
+    this.getUser = this.getUser.bind(this);
+    this.resize = this.resize.bind(this);
+    this.handleSidebar = this.handleSidebar.bind(this);
+    this.handleChangeRegistrationField = this.handleChangeRegistrationField.bind(this);
+    this.handleRegistrationSubmit = this.handleRegistrationSubmit.bind(this);
   }
 
   /* 
   ***  ZU NOTES  *** 
   - when a user complete the brightcoin kyc we have to put his email and his amount in db
+[record to put in db: email, llToken, llScore, investDate, kycCompleted, kycDate, kyvDateUpdate]
   - when a user register or login in cognito, we get the user from the db
   - if email is in db he can proceed and the left message is welcome, otherwise left message "not your time"
   - he must register, very similar to our old prekyc
@@ -133,17 +158,27 @@ class AppRoutes extends React.Component {
   getUser = async () => {
     const response = await API.get('dashboardAPI', '/items/' + this.state.email);
     if(response){
-      //console.log('getUser response:\n' + JSON.stringify(response));
       if(this.state.userLoaded === false) { 
-        this.setState({   
-          userLoaded: true,    
-          firstName: response[0].firstName,
-          lastName: response[0].lastName,
-          llToken: response[0].investAmount,
-          investDate: response[0].investDate
-        },  function () { console.log('getUser:\n' + JSON.stringify(this.state)); });
+        let holdingDays = Math.floor( (Date.parse(Date('Y-m-d')) - Date.parse(response[0].investDate)) / (1000 * 60 * 60 * 24));
+        let llScore = response[0].llToken * holdingDays; 
+        
+        if(response[0].firstName === '' || response[0].lastName === '' || response[0].llToken === '' || response[0].investDate === ''){
+          this.setState({ userActive: false });
+        }
+        else {
+          this.setState({   
+            userLoaded: true,    
+            firstName: response[0].firstName, middleName:response[0].middleName, lastName: response[0].lastName, dateBirth: response[0].dateBirth,
+            address:response[0].address, city:response[0].city, zipCode:response[0].zipCode, regionState:response[0].regionState,
+            countryCitizenship:response[0].countryCitizenship, countryResidence:response[0].countryResidence,
+            occupation:response[0].occupation, accreditedInvestor: response[0].accreditedInvestor,        
+            kycCompleted: response[0].kycCompleted, kycDate: response[0].kycDate, kycDateUpdate: response[0].kycDateUpdate,
+            llToken: response[0].llToken, investDate: response[0].investDate, llScore: llScore,
+            llRegistered: response[0].llRegistered, registrationDate: response[0].registrationDate, registrationDateUpdate: response[0].registrationDateUpdate,
+          },  function () { console.log('routes.js getUser:\n' + JSON.stringify(this.state)); });
+        }
       }
-    }
+    } else this.setState({ userActive: false });
   }
 
   resize = () => {
@@ -156,7 +191,65 @@ class AppRoutes extends React.Component {
       }, function () { this.forceUpdate() }); 
     }
   }
+
+  handleSidebar = () => {
+    this.setState({ sidebarOpened: !this.state.sidebarOpened })
+  }
+
+  handleChangeRegistrationField = name => event => { this.setState({ [name]: event.target.value }); };
   
+  handleRegistrationSubmit = (e) => {
+    e.preventDefault();
+    this.post();
+    console.log('posting');
+  }
+
+  post = async () => {
+    console.log('calling api');
+
+  if(this.state.firstName==='' || this.state.lastName==='' || 
+      this.state.address==='' || this.state.city==='' || this.state.zipCode==='' || this.state.regionState==='' || 
+      this.state.countryCitizenship==='' || this.state.countryResidence==='' || 
+      this.state.dateBirth==='' || this.state.occupation==='' || 
+      /*this.state.amount==='' ||*/ this.state.accreditedInvestor===''){
+        alert('Please complete all required fields'); 
+        return false;
+
+  } else {
+    
+    const response = await API.post('dashboardAPI', '/items/', {
+      body: {
+        
+        user_email:this.state.email,
+        firstName:this.state.firstName,
+        middleName:this.state.middleName || null,
+        lastName:this.state.lastName,          
+        address:this.state.address,
+        city:this.state.city,
+        zipCode:this.state.zipCode,
+        regionState:this.state.regionState,
+        countryCitizenship:this.state.countryCitizenship,
+        countryResidence:this.state.countryResidence,
+        dateBirth:this.state.dateBirth,
+        occupation:this.state.occupation,  
+        //amount:this.state.amount,  
+        accreditedInvestor:this.state.accreditedInvestor, 
+        kycCompleted: this.state.kycCompleted, kycDate: this.state.kycDate, kycDateUpdate: this.state.kycDateUpdate,
+        llToken:this.state.llToken, llScore:this.state.llScore, investDate: this.state.investDate,
+        llRegistered: true, registrationDate: Date('Y-m-d'), registrationDateUpdate: Date('Y-m-d'), 
+      }
+    });      
+    //console.log('put response:\n' + JSON.stringify(response));
+    this.setState({
+      llRegistered: true, 
+      registrationDate: Date('Y-m-d'), 
+      registrationDateUpdate: Date('Y-m-d')    
+    }, function () {
+      window.location.href='/';
+      //console.log('update state after post:\n' + JSON.stringify(this.state)); 
+    });
+  }
+  }
 
   componentDidMount() { window.addEventListener('resize', this.resize); }
   componentWillUnmount() { window.removeEventListener('resize', this.resize); }
@@ -171,9 +264,10 @@ class AppRoutes extends React.Component {
           this.setState({
             email: user.attributes.email,
             cognitoLogged: true,
+            userType: 3, // ZUNOTE: make it dynamic
           } , 
           function () { 
-            console.log('routes.js state:\n' + JSON.stringify(this.state)); 
+            console.log('routes.js get cognito user:\n' + JSON.stringify(this.state)); 
             this.getUser();
           });
         
@@ -213,11 +307,23 @@ class AppRoutes extends React.Component {
         <ForgotPassword/>
         <TOTPSetup/>
         
-        <App userState={this.state}>
+        <App userState={this.state} handleSidebar={this.handleSidebar}>
           <Switch>
             <Route path="/" exact render={(props) => <Home userState={this.state} {...props} /> } />
+            <Route path="/register" exact render={(props) => <Register 
+                                                              userState={this.state} 
+                                                              handleChangeRegistrationField={this.handleChangeRegistrationField}
+                                                              handleRegistrationSubmit={this.handleRegistrationSubmit}
+                                                              {...props} /> } />
+            <Route path="/profile" exact render={(props) => <Profile userState={this.state} {...props} /> } />
             <Route component={Error404} />
           </Switch>
+
+          <Sidebar 
+                    isOpen={this.state.sidebarOpened}
+                    cognitoLogged={ this.state.cognitoLogged} 
+                    userType={ this.state.userType}
+                /> 
         </App>
       </Authenticator>
     )
